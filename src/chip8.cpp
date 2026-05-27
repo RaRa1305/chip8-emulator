@@ -127,3 +127,19 @@ void Chip8::cycle()
         break;
     }
 }
+
+bool Chip8::loadROM(const char *filename)
+{
+    std::ifstream file(filename, std::ios::binary | std::ios::ate);
+
+    if (file.is_open())
+    {
+        std::streampos size = file.tellg();
+        file.seekg(0, std::ios::beg);
+        file.read(reinterpret_cast<char *>(&memory[0x200]), size);
+        file.close();
+
+        return true;
+    }
+    return false;
+}

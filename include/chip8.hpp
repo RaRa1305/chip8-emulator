@@ -1,10 +1,12 @@
 #include <cstdint>
 #include <array>
+#include<fstream>
 
 class Chip8 {
 public:
     Chip8(); 
     void cycle();
+    bool loadROM(const char* filename);
 
     // Memory and registers
     std::array<uint8_t, 4096> memory{};
