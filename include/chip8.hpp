@@ -4,6 +4,7 @@
 class Chip8 {
 public:
     Chip8(); 
+    void cycle();
 
     // Memory and registers
     std::array<uint8_t, 4096> memory{};

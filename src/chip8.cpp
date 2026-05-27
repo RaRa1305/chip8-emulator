@@ -22,9 +22,108 @@ const uint8_t font[80] = {
 Chip8::Chip8()
 {
     PC = 0x200;
-    
+
     for (int i = 0; i < 80; i++)
     {
         memory[0x050 + i] = font[i];
+    }
+}
+
+void Chip8::cycle()
+{
+    // FETCH
+    uint16_t opcode = (memory[PC] << 8u) | memory[PC + 1];
+    PC += 2;
+
+    // DECODE & EXECUTE
+    uint8_t X = (opcode & 0x0F00u) >> 8u;
+    uint8_t Y = (opcode & 0x00F0u) >> 4u;
+    uint8_t N = opcode & 0x000Fu;
+    uint8_t NN = opcode & 0x00FFu;
+    uint16_t NNN = opcode & 0x0FFFu;
+
+    // Isolate the first digit
+    switch (opcode & 0xF000u)
+    {
+
+    case 0x0000:
+        switch (NN)
+        {
+        case 0xE0u:
+            display = {};
+            break;
+
+        case 0xEEu:
+            break;
+
+        default:
+            break;
+        }
+        break;
+
+    case 0x1000:
+        // 1NNN: Jump to NNN
+        PC = NNN;
+        break;
+
+    case 0x6000:
+        // 6XNN: Set register VX
+        V[X] = NN;
+        break;
+
+    case 0x7000:
+        // 7XNN: Add to register VX
+        V[X] += NN;
+        break;
+
+    case 0xA000:
+        // ANNN: Set Index
+        I = NNN;
+        break;
+
+    case 0xD000:
+    {
+        uint8_t x = V[X] & 63;
+        uint8_t y = V[Y] & 31;
+        V[0xF] = 0;
+
+        for (unsigned int row = 0; row < N; row++)
+        {
+            uint8_t spriteByte = memory[I + row];
+
+            for (unsigned int col = 0; col < 8; col++)
+            {
+                uint8_t spritePixel = spriteByte & (0x80u >> col);
+
+                uint32_t screenX = x + col;
+                uint32_t screenY = y + row;
+
+                if (screenX >= 64)
+                {
+                    break;
+                }
+
+                if (screenY >= 32)
+                {
+                    break;
+                }
+
+                if (spritePixel)
+                {
+                    uint32_t index = screenX + (screenY * 64);
+                    if (display[index])
+                    {
+                        V[0xF] = 1;
+                    }
+
+                    display[index] ^= 1;
+                }
+            }
+        }
+        break;
+    }
+
+    default:
+        break;
     }
 }
