@@ -55,6 +55,8 @@ void Chip8::cycle()
             break;
 
         case 0xEEu:
+            if (sp == 0)
+                break;
             sp--;
             PC = stack[sp];
             break;
@@ -71,6 +73,8 @@ void Chip8::cycle()
 
     case 0x2000:
         // 2NNN: Jump to NNN
+        if (sp >= 16)
+            break;
         stack[sp] = PC;
         sp++;
         PC = NNN;
@@ -221,6 +225,8 @@ void Chip8::cycle()
 
         for (unsigned int row = 0; row < N; row++)
         {
+            if (I + row >= 4096)
+                break;
             uint8_t spriteByte = memory[I + row];
 
             for (unsigned int col = 0; col < 8; col++)
@@ -337,6 +343,8 @@ void Chip8::cycle()
             uint16_t idx = I;
             for (int i = 0; i <= X; i++)
             {
+                if (idx + i >= 4096)
+                    break;
                 memory[idx + i] = V[i];
             }
             break;
@@ -347,6 +355,8 @@ void Chip8::cycle()
             uint16_t idx = I;
             for (int i = 0; i <= X; i++)
             {
+                if (idx + i >= 4096)
+                    break;
                 V[i] = memory[idx + i];
             }
             break;
@@ -369,6 +379,11 @@ bool Chip8::loadROM(const char *filename)
     if (file.is_open())
     {
         std::streampos size = file.tellg();
+        const std::streampos MAX_AVL_SIZE = 4096 - 0x200;
+        if (size > MAX_AVL_SIZE)
+        {
+            return false;
+        }
         file.seekg(0, std::ios::beg);
         file.read(reinterpret_cast<char *>(&memory[0x200]), size);
         file.close();
