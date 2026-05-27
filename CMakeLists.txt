@@ -6,10 +6,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include_directories(include)
 
-find_package(SDL2 REQUIRED)
+find_package(SDL3 REQUIRED)
 
 add_executable(chip8 src/main.cpp src/chip8.cpp)
 
-
-target_link_libraries(chip8 ${SDL2_LIBRARIES})
-target_include_directories(chip8 PRIVATE ${SDL2_INCLUDE_DIRS})
+target_link_libraries(chip8 PRIVATE SDL3::SDL3)
