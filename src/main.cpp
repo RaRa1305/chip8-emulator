@@ -22,12 +22,13 @@ int main(int argc, char *argv[])
 
     SDL_Init(SDL_INIT_VIDEO);
 
-    SDL_Window *window = SDL_CreateWindow("CHIP-8 Emulator", 64 * SCALE, 32 * SCALE, 0);
+    SDL_Window *window = SDL_CreateWindow("CHIP-8 Emulator", 64 * SCALE, 32 * SCALE, SDL_WINDOW_RESIZABLE);
     SDL_Renderer *renderer = SDL_CreateRenderer(window, nullptr);
     SDL_Texture *texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, 64, 32);
     SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST);
 
     uint32_t videoBuffer[64 * 32];
+    uint8_t brightness[2048] = {0};
     bool quit = false;
     SDL_Event e;
 
@@ -181,7 +182,23 @@ int main(int argc, char *argv[])
 
         for (int i = 0; i < 2048; i++)
         {
-            videoBuffer[i] = chip8.display[i] ? 0xFFFFFFFF : 0xFF000000;
+            if (chip8.display[i])
+            {
+                brightness[i] = 255;
+            }
+            else
+            {
+                if (brightness[i] > 80)
+                {
+                    brightness[i] -= 80;
+                }
+                else
+                {
+                    brightness[i] = 0;
+                }
+            }
+
+            videoBuffer[i] = (0xFF << 24) | (brightness[i] << 16) | (brightness[i] << 8) | brightness[i];
         }
 
         SDL_UpdateTexture(texture, nullptr, videoBuffer, 64 * sizeof(uint32_t));
