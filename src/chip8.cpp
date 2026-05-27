@@ -76,6 +76,86 @@ void Chip8::cycle()
         V[X] += NN;
         break;
 
+    case 0x8000:
+    {
+        switch (opcode & 0x000Fu)
+        {
+        case 0x0000:
+            V[X] = V[Y];
+            break;
+
+        case 0x0001:
+            V[X] |= V[Y];
+            break;
+
+        case 0x0002:
+            V[X] &= V[Y];
+            break;
+
+        case 0x0003:
+            V[X] ^= V[Y];
+            break;
+
+        case 0x0004:
+        {
+            uint16_t sum = V[X] + V[Y];
+            if (sum > 255u)
+            {
+                V[0xF] = 1;
+            }
+            else
+            {
+                V[0xF] = 0;
+            }
+            V[X] = sum & 0xFFu;
+            break;
+        }
+
+        case 0x0005:
+            if (V[X] >= V[Y])
+            {
+                V[0xF] = 1;
+            }
+            else
+            {
+                V[0xF] = 0;
+            }
+            V[X] -= V[Y];
+            break;
+
+        case 0x0006:
+        {
+            uint8_t flag = V[X] & 0x1u;
+            V[X] >>= 1;
+            V[0xF] = flag;
+            break;
+        }
+
+        case 0x0007:
+            if (V[X] <= V[Y])
+            {
+                V[0xF] = 1;
+            }
+            else
+            {
+                V[0xF] = 0;
+            }
+            V[X] = V[Y] - V[X];
+            break;
+
+        case 0x000E:
+        {
+            uint8_t flag = (V[X] & 0x80u) >> 7u;
+            V[X] <<= 1;
+            V[0xF] = flag;
+            break;
+        }
+        default:
+            break;
+        }
+        break;
+    }
+
     case 0xA000:
         // ANNN: Set Index
         I = NNN;
