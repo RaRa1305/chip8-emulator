@@ -25,6 +25,7 @@ int main(int argc, char *argv[])
     SDL_Window *window = SDL_CreateWindow("CHIP-8 Emulator", 64 * SCALE, 32 * SCALE, 0);
     SDL_Renderer *renderer = SDL_CreateRenderer(window, nullptr);
     SDL_Texture *texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, 64, 32);
+    SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST);
 
     uint32_t videoBuffer[64 * 32];
     bool quit = false;
