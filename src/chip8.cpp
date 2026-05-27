@@ -1,4 +1,5 @@
 #include "chip8.hpp"
+#include <cstdlib>
 
 const uint8_t font[80] = {
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
@@ -54,6 +55,8 @@ void Chip8::cycle()
             break;
 
         case 0xEEu:
+            sp--;
+            PC = stack[sp];
             break;
 
         default:
@@ -64,6 +67,45 @@ void Chip8::cycle()
     case 0x1000:
         // 1NNN: Jump to NNN
         PC = NNN;
+        break;
+
+    case 0x2000:
+        // 2NNN: Jump to NNN
+        stack[sp] = PC;
+        sp++;
+        PC = NNN;
+        break;
+
+    case 0x3000:
+        // 3XNN: Skips if VX = NN
+        if (V[X] == NN)
+        {
+            PC += 2;
+        }
+        break;
+
+    case 0x4000:
+        // 4XNN: Skips if VX is not equal to NN
+        if (V[X] != NN)
+        {
+            PC += 2;
+        }
+        break;
+
+    case 0x5000:
+        // 5XY0: Skips if VX = VY
+        if (V[X] == V[Y])
+        {
+            PC += 2;
+        }
+        break;
+
+    case 0x9000:
+        // 9XY0: Skips if VX is not equal to VY
+        if (V[X] != V[Y])
+        {
+            PC += 2;
+        }
         break;
 
     case 0x6000:
@@ -161,6 +203,16 @@ void Chip8::cycle()
         I = NNN;
         break;
 
+    case 0xB000:
+        // BNNN: Jump to NNN + V[0]
+        PC = V[0] + NNN;
+        break;
+
+    case 0xC000:
+        // CXNN: Set V[X] = random byte AND NN
+        V[X] = (rand() % 256) & NN;
+        break;
+
     case 0xD000:
     {
         uint8_t x = V[X] & 63;
@@ -201,6 +253,108 @@ void Chip8::cycle()
             }
         }
         break;
+    }
+
+    case 0xE000:
+    {
+        switch (NN)
+        {
+        case 0x9E:
+            if (keypad[V[X]])
+            {
+                PC += 2;
+            }
+            break;
+
+        case 0xA1:
+            if (!keypad[V[X]])
+            {
+                PC += 2;
+            }
+            break;
+
+        default:
+            break;
+        }
+        break;
+    }
+
+    case 0xF000:
+    {
+        switch (NN)
+        {
+        case 0x07:
+            V[X] = delayTimer;
+            break;
+
+        case 0x15:
+            delayTimer = V[X];
+            break;
+
+        case 0x18:
+            soundTimer = V[X];
+            break;
+
+        case 0x1E:
+            I += V[X];
+            if (I >= 0x1000)
+            {
+                V[0xF] = 1;
+            }
+            break;
+
+        case 0x0A:
+        {
+            bool press = false;
+            for (int i = 0; i < 16; i++)
+            {
+                if (keypad[i] != 0)
+                {
+                    V[X] = i;
+                    press = true;
+                    break;
+                }
+            }
+            if (!press)
+            {
+                PC -= 2;
+            }
+            break;
+        }
+
+        case 0x29:
+            I = 0x050 + (V[X] * 5);
+            break;
+
+        case 0x33:
+            memory[I] = V[X] / 100;
+            memory[I + 1] = (V[X] / 10) % 10;
+            memory[I + 2] = V[X] % 10;
+            break;
+
+        case 0x55:
+        {
+            uint16_t idx = I;
+            for (int i = 0; i <= X; i++)
+            {
+                memory[idx + i] = V[i];
+            }
+            break;
+        }
+
+        case 0x65:
+        {
+            uint16_t idx = I;
+            for (int i = 0; i <= X; i++)
+            {
+                V[i] = memory[idx + i];
+            }
+            break;
+        }
+
+        default:
+            break;
+        }
     }
 
     default:
