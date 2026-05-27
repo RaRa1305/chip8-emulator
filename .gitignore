@@ -1,3 +1,8 @@
+*.exe
+*.dll
+*.ch8
+!roms/*.ch8
+
 # Prerequisites
 *.d
 
